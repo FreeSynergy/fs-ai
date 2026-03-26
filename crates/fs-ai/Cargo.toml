@@ -1,0 +1,28 @@
+[package]
+name        = "fs-ai"
+description = "FreeSynergy AI — local LLM engine manager UI"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+name = "fs_ai"
+path = "src/lib.rs"
+
+[[bin]]
+name = "fs-ai"
+path = "src/main.rs"
+
+[features]
+default = ["desktop"]
+desktop = ["dioxus/desktop"]
+web     = ["dioxus/web"]
+
+[dependencies]
+fs-manager-ai = { workspace = true }
+fs-i18n       = { workspace = true }
+dioxus        = { workspace = true }
+serde         = { workspace = true }
+serde_json    = { workspace = true }

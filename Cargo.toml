@@ -1,0 +1,31 @@
+[workspace]
+members = [
+    "crates/fs-manager-ai",
+    "crates/fs-ai",
+]
+resolver = "2"
+
+[workspace.package]
+version     = "0.1.0"
+edition     = "2021"
+license     = "MIT"
+authors     = ["FreeSynergy.Net"]
+repository  = "https://github.com/FreeSynergy/fs-ai"
+
+[workspace.dependencies]
+# Internal
+fs-manager-ai = { path = "crates/fs-manager-ai" }
+fs-i18n       = { path = "../fs-libs/fs-i18n", features = ["dioxus"] }
+
+# Serde
+serde       = { version = "1", features = ["derive"] }
+serde_json  = { version = "1" }
+thiserror   = { version = "2" }
+
+# UI
+dioxus = { version = "0.7.3", default-features = false, features = ["macro", "html", "signals", "hooks", "launch"] }
+
+# ── Local patches ──────────────────────────────────────────────────────────────
+# Keep in sync with fs-desktop patch.
+[patch.crates-io]
+dioxus-desktop = { path = "../fs-desktop/vendor/dioxus-desktop" }
