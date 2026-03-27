@@ -15,7 +15,7 @@ repository  = "https://github.com/FreeSynergy/fs-ai"
 [workspace.dependencies]
 # Internal
 fs-manager-ai = { path = "crates/fs-manager-ai" }
-fs-i18n       = { path = "../fs-libs/fs-i18n", features = ["dioxus"] }
+fs-i18n       = { path = "../fs-i18n", features = ["dioxus"] }
 
 # Serde
 serde       = { version = "1", features = ["derive"] }
