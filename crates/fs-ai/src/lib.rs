@@ -1,6 +1,4 @@
-#![deny(clippy::all, clippy::pedantic)]
-#![deny(warnings)]
-#![allow(clippy::must_use_candidate)]
+#![deny(clippy::all, clippy::pedantic, warnings)]
 
 pub mod app;
 
@@ -42,12 +40,14 @@ impl AiStatus {
     }
 
     /// Returns `true` if the LLM engine binary is installed.
+    #[must_use]
     pub fn is_installed() -> bool {
         Self::engine().is_installed()
     }
 
     /// Returns the OpenAI-compatible API base URL if the engine is running,
     /// e.g. `"http://127.0.0.1:1234/v1"`.
+    #[must_use]
     pub fn api_url() -> Option<String> {
         match Self::engine().status() {
             fs_manager_ai::EngineStatus::Running { port } => {
@@ -60,9 +60,11 @@ impl AiStatus {
 
 // ── Public shims ──────────────────────────────────────────────────────────────
 
+#[must_use]
 pub fn is_ai_installed() -> bool {
     AiStatus::is_installed()
 }
+#[must_use]
 pub fn ai_api_url() -> Option<String> {
     AiStatus::api_url()
 }

@@ -1,8 +1,4 @@
-#![deny(clippy::all, clippy::pedantic)]
-#![deny(warnings)]
-#![allow(clippy::missing_errors_doc)]
-#![allow(clippy::must_use_candidate)]
-#![allow(clippy::doc_markdown)]
+#![deny(clippy::all, clippy::pedantic, warnings)]
 // FreeSynergy AI Manager — backend
 //
 // Responsibilities:
@@ -36,11 +32,13 @@ pub enum EngineStatus {
 }
 
 impl EngineStatus {
+    #[must_use]
     pub fn is_running(&self) -> bool {
         matches!(self, Self::Running { .. })
     }
 
-    pub fn label(&self) -> &str {
+    #[must_use]
+    pub fn label(&self) -> &'static str {
         match self {
             Self::Stopped => "Stopped",
             Self::Running { .. } => "Running",
@@ -69,7 +67,7 @@ pub struct ModelSpec {
 /// All built-in models. Order determines `all_predefined()` output.
 ///
 /// To add a new model: add one row here + one variant to `LlmModel` + one arm
-/// in `spec()`.  Everything else (display_name, ram_gb, from_hf_id, …) is
+/// in `spec()`.  Everything else (`display_name`, `ram_gb`, `from_hf_id`, …) is
 /// driven automatically from this table.
 const CATALOGUE: &[ModelSpec] = &[
     ModelSpec {
@@ -117,6 +115,7 @@ impl LlmModel {
     }
 
     /// Hugging Face model ID (e.g. `"Qwen/Qwen3-4B"`).
+    #[must_use]
     pub fn hf_id(&self) -> &str {
         self.spec().map_or_else(
             || {
@@ -131,11 +130,13 @@ impl LlmModel {
     }
 
     /// Human-readable name for UI pickers.
+    #[must_use]
     pub fn display_name(&self) -> &str {
         self.spec().map_or("Custom model", |s| s.display_name)
     }
 
     /// Estimated RAM in GB after ISQ Q4K quantization.
+    #[must_use]
     pub fn ram_gb(&self) -> f32 {
         self.spec().map_or(0.0, |s| s.ram_gb)
     }
@@ -146,6 +147,7 @@ impl LlmModel {
     }
 
     /// Construct from a Hugging Face ID; falls back to `Custom`.
+    #[must_use]
     pub fn from_hf_id(id: &str) -> Self {
         CATALOGUE
             .iter()
@@ -184,7 +186,11 @@ pub trait AiEngine {
     fn name(&self) -> &'static str;
     fn engine_type(&self) -> EngineType;
     fn status(&self) -> EngineStatus;
+    /// # Errors
+    /// Returns an error if the engine cannot be started.
     fn start(&self) -> Result<(), AiError>;
+    /// # Errors
+    /// Returns an error if the engine cannot be stopped.
     fn stop(&self) -> Result<(), AiError>;
 }
 
@@ -211,12 +217,14 @@ impl LlmEngine {
     }
 
     /// Default install path for the mistral.rs binary.
+    #[must_use]
     pub fn default_binary() -> PathBuf {
         let home = std::env::var("HOME").unwrap_or_else(|_| "/root".into());
         PathBuf::from(home).join(".local/share/fsn/bin/mistral/mistralrs")
     }
 
     /// Default data directory for logs, PID file, and model cache.
+    #[must_use]
     pub fn default_data_dir() -> PathBuf {
         let home = std::env::var("HOME").unwrap_or_else(|_| "/root".into());
         PathBuf::from(home).join(".local/share/fsn/data/mistral")
@@ -254,12 +262,18 @@ impl LlmEngine {
         return false;
     }
 
+    #[must_use]
     pub fn is_installed(&self) -> bool {
         self.binary_path.exists()
     }
 
     /// Writes `~/.continue/config.json` so the editor can use the local LLM.
     /// Call after a successful `start()`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AiError::Config`] if `HOME` is not set or JSON serialization fails,
+    /// or [`AiError::Io`] on filesystem errors.
     pub fn write_continue_config(&self) -> Result<(), AiError> {
         let home = std::env::var("HOME").map_err(|_| AiError::Config("HOME not set".into()))?;
         let continue_dir = PathBuf::from(home).join(".continue");
@@ -335,6 +349,8 @@ impl AiEngine for LlmEngine {
         }
     }
 
+    /// # Errors
+    /// Returns an error if the binary is not installed or the process cannot be spawned.
     fn start(&self) -> Result<(), AiError> {
         if self.status().is_running() {
             return Ok(());
@@ -382,6 +398,8 @@ impl AiEngine for LlmEngine {
         Ok(())
     }
 
+    /// # Errors
+    /// Returns an error if the kill command fails.
     fn stop(&self) -> Result<(), AiError> {
         let Some(pid) = self.read_pid() else {
             return Ok(()); // already stopped

@@ -1,5 +1,4 @@
-#![deny(clippy::all, clippy::pedantic)]
-#![deny(warnings)]
+#![deny(clippy::all, clippy::pedantic, warnings)]
 
 fn main() {
     #[cfg(feature = "desktop")]
