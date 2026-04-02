@@ -28,14 +28,14 @@ impl FsView for AiView {
     fn view(&self) -> Box<dyn FsWidget> {
         let start_btn = ButtonWidget {
             id: "ai-btn-start".into(),
-            label: "ai-start-engine".into(), // FTL key
+            label: crate::keys::BTN_START.into(), // FTL key
             enabled: !self.model.running && !self.model.busy,
             action: "start".into(),
         };
 
         let stop_btn = ButtonWidget {
             id: "ai-btn-stop".into(),
-            label: "ai-stop-engine".into(), // FTL key
+            label: crate::keys::BTN_STOP.into(), // FTL key
             enabled: self.model.running && !self.model.busy,
             action: "stop".into(),
         };
@@ -43,9 +43,9 @@ impl FsView for AiView {
         let model_names: Vec<String> = self.models.iter().map(|m| m.name.clone()).collect();
 
         let status_label = if self.model.running {
-            format!("ai-status-running:port={}", self.model.port.unwrap_or(0))
+            format!("Running · Port {}", self.model.port.unwrap_or(0))
         } else {
-            "ai-status-stopped".into()
+            crate::keys::STATUS_STOPPED.into()
         };
 
         Box::new(ListWidget {
