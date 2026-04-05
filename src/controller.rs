@@ -6,6 +6,9 @@ use std::sync::{Arc, Mutex};
 
 use fs_manager_ai::{AiEngine, EngineStatus, LlmConfig, LlmEngine, LlmModel};
 
+use crate::conversation::{
+    ConversationStore, ConversationTurn, InMemoryConversationStore, TurnRole,
+};
 use crate::model::{AiModel, KnownModel};
 
 // ── AiController ─────────────────────────────────────────────────────────────
@@ -14,6 +17,7 @@ use crate::model::{AiModel, KnownModel};
 #[derive(Clone)]
 pub struct AiController {
     state: Arc<Mutex<AiModel>>,
+    conversation: Arc<dyn ConversationStore>,
 }
 
 impl AiController {
@@ -21,7 +25,35 @@ impl AiController {
     pub fn new() -> Self {
         Self {
             state: Arc::new(Mutex::new(AiModel::new())),
+            conversation: Arc::new(InMemoryConversationStore::new()),
         }
+    }
+
+    /// Create a controller with an explicit conversation store.
+    #[must_use]
+    pub fn with_conversation(store: impl ConversationStore + 'static) -> Self {
+        Self {
+            state: Arc::new(Mutex::new(AiModel::new())),
+            conversation: Arc::new(store),
+        }
+    }
+
+    /// Append a user message and the AI's reply to the conversation history.
+    pub fn record_exchange(&self, user_msg: &str, ai_reply: &str) {
+        self.conversation
+            .append(ConversationTurn::now(TurnRole::User, user_msg));
+        self.conversation
+            .append(ConversationTurn::now(TurnRole::Assistant, ai_reply));
+    }
+
+    /// Return the full conversation history.
+    pub fn history(&self) -> Vec<ConversationTurn> {
+        self.conversation.history()
+    }
+
+    /// Clear the conversation history.
+    pub fn clear_history(&self) {
+        self.conversation.clear();
     }
 
     /// Snapshot of the current model state.
