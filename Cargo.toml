@@ -21,6 +21,8 @@ fs-manager-ai = { path = "../fs-managers/ai" }
 fs-i18n       = { path = "../fs-i18n" }
 fs-error      = { path = "../fs-libs/fs-error" }
 
+reqwest            = { version = "0.13", features = ["json", "rustls", "blocking"], default-features = false }
+
 async-trait        = "0.1"
 chrono             = { version = "0.4", features = ["serde"] }
 serde              = { version = "1", features = ["derive"] }

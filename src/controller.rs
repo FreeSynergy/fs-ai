@@ -117,6 +117,48 @@ impl AiController {
         Ok(())
     }
 
+    /// Send a chat question to the running LLM engine and return the response.
+    ///
+    /// Calls the OpenAI-compatible `/v1/chat/completions` endpoint on the local
+    /// engine port.  Returns an error string when the engine is not running or
+    /// the HTTP call fails.
+    pub fn chat(&self, question: &str, context: &str) -> Result<String, String> {
+        let api_url = self
+            .snapshot()
+            .api_url()
+            .ok_or_else(|| "AI engine is not running".to_string())?;
+
+        let prompt = if context.is_empty() {
+            question.to_owned()
+        } else {
+            format!("Context: {context}\n\nQuestion: {question}")
+        };
+
+        let body = serde_json::json!({
+            "model": "local",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 512
+        });
+
+        let client = reqwest::blocking::Client::new();
+        let resp = client
+            .post(format!("{api_url}/chat/completions"))
+            .json(&body)
+            .send()
+            .map_err(|e| format!("AI request failed: {e}"))?
+            .error_for_status()
+            .map_err(|e| format!("AI error: {e}"))?;
+
+        let json: serde_json::Value = resp
+            .json()
+            .map_err(|e| format!("AI response parse error: {e}"))?;
+
+        json["choices"][0]["message"]["content"]
+            .as_str()
+            .map(str::to_owned)
+            .ok_or_else(|| "Unexpected AI response format".to_string())
+    }
+
     fn model_from_id(id: &str) -> Result<LlmModel, String> {
         match id {
             "qwen3-4b" => Ok(LlmModel::Qwen3_4B),
