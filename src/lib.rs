@@ -19,6 +19,7 @@
 #![allow(clippy::needless_for_each)]
 
 pub mod cli;
+pub mod component;
 pub mod controller;
 pub mod conversation;
 pub mod grpc;
@@ -27,6 +28,7 @@ pub mod model;
 pub mod rest;
 pub mod view;
 
+pub use component::AiComponent;
 pub use controller::AiController;
 pub use conversation::{
     ConversationStore, ConversationTurn, InMemoryConversationStore, TomlConversationStore, TurnRole,
